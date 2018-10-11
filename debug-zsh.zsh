@@ -1,5 +1,5 @@
 #!/bin/zsh
-setopt extendedglob debugbeforecmd; zmodload zsh/parameter
+
 
 declare DZSH_VERSION='0.1.0'
 declare DZSH_NAME='debug-zsh'
@@ -37,6 +37,8 @@ __dzsh() {
     }
     "$@"
 }
+builtin setopt extendedglob debugbeforecmd || __dzsh die "Couldn't setopt extendedglob debugbeforecmd; make sure this ZSH installation has those available"
+builtin zmodload zsh/parameter zsh/system  || __dzsh die "Couldn't load modules zsh/parameter and zsh/system; make sure this ZSH installation has those available"
 
 __dzsh header
 
@@ -50,14 +52,14 @@ declare DEBUG_CFG_PATH="$HOME/.config/zsh/debug.lib"
 declare THIS_STDOUT="${${(Ms< >)${(f)$(ps ax)}[@]:#$$*}[2]}"
 __dzsh pifo "Planning to Execute Script on $THIS_STDOUT"
 
-declare RID="$RANDOM"; declare DEBUG_WAIT="$DEBUG_CFG_PATH/debug.$RID.wait"
-mkfifo "$DEBUG_WAIT" || die "Couldn't create named pipe"
+declare RID="$RANDOM"; declare IN_PIPE="$DEBUG_CFG_PATH/debug.$RID.wait"; declare OUT_PIPE="$DEBUG_CFG_PATH/monitor.$RID.wait"
+mkfifo "$DEBUG_WAIT" "$OUT_PIPE" || die "Couldn't create named pipe"
+__dzsh pifo 'Starting monitor and waiting for it to attach'
 
-print -- $'\e[1;97mStarting monitor and waiting for it to attach . . . '
-local REMOTE_STDOUT
 tmux split-window "$DEBUG_ZSH_DIR/lib/monitor.lib.zsh $RID; read"
-read REMOTE_STDOUT < "$DEBUG_WAIT"
+local REMOTE_STDOUT; read REMOTE_STDOUT < "$DEBUG_WAIT"
 [[ -z "$REMOTE_STDOUT" || "$REMOTE_STDOUT" == pts/* ]] || __dzsh die "It doesn't appear the monitor started successfully"
+
 print -- $'\e[1;97mSending monitor output to \e[0;37m'"$REMOTE_STDOUT"
 
 source "$DEBUG_ZSH_DIR/lib/debug.lib.zsh"

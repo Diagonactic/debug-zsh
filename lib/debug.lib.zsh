@@ -5,7 +5,11 @@ __debug/die() {
 
 to-relative-path() { realpath --relative-to="${${2:-$DZSH_TARGET_DIRECTORY}:A}" "$1" }
 
-function nice-debug() {
+function set-debug-vars() {
+
+}
+
+function eval-debug() {
     local -i IX=2
 
     __debug/nice-debug-line() {
@@ -47,16 +51,23 @@ function nice-debug() {
                     tracelines=( "${${(@)funcfiletrace:$IX}[@]##*:}" ) \
                     funcs=( "${${(@)funcfiletrace:$IX}[@]%%:*}" )
     fi
+
     (( ${#traces} > 0 )) || return 1
     integer i=0
 
-    for (( i=1; i<=${#traces[@]}; i++ )); do
-        __debug/nice-debug-line "${traces[$i]}" "${tracelines[$i]}" "${funcs[$i]}" ${${${(M)i:#1}:+long}:-short}
-    done
+    print -- "local -ar traces=( ${j< >${(qqq@)traces[@]}} ) tracelines=( ${j< >${(qqq@)tracelines[@]}} ) funcs=( ${j< >${(qqq@)funcs[@]}} )"
+
+    # print -- "local -ar ;"
+    # print -- "local -ar traces=( ${j< >${(qqq@)traces[@]}} );"
+
+    # for (( i=1; i<=${#traces[@]}; i++ )); do
+    #     __debug/nice-debug-line "${traces[$i]}" "${tracelines[$i]}" "${funcs[$i]}" ${${${(M)i:#1}:+long}:-short}
+    # done
 }
 
-TRAPDEBUG() > "/dev/$REMOTE_STDOUT" {
+TRAPDEBUG() > "$OUT_PIPE" 2>&1 {
     if [[ "${funcfiletrace[1]}" == */(debug.lib|debug-zsh).zsh ]]; then return 0; fi
-    nice-debug
-    read -k1 -s
+    eval-debug
+    local CMD=''
+    cat "$IN_PIPE" | read CMD
 }
