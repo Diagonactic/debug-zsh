@@ -69,5 +69,5 @@ TRAPDEBUG() > "$OUT_PIPE" 2>&1 {
     if [[ "${funcfiletrace[1]}" == */(debug.lib|debug-zsh).zsh ]]; then return 0; fi
     eval-debug
     local CMD=''
-    cat "$IN_PIPE" | read CMD
+    CMD="$(cat "$IN_PIPE")"
 }
