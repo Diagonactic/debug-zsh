@@ -3,9 +3,7 @@ __debug/die() {
     exit "${2:-1}"
 }
 
-export DEBUG_SESSION="$1-$RANDOM"
-export DEBUG_${DEBUG_SESSION}_PIPE="$DEBUG_SESSION"
-to-relative-path() { realpath --relative-to="${${2:-$PWD}:A}" "$1" }
+to-relative-path() { realpath --relative-to="${${2:-$DZSH_TARGET_DIRECTORY}:A}" "$1" }
 
 function nice-debug() {
     local -i IX=2
@@ -57,8 +55,8 @@ function nice-debug() {
     done
 }
 
-TRAPDEBUG() {
-    if [[ "${funcfiletrace[1]}" == (*/debug.lib.zsh) ]]; then return 0; fi
+TRAPDEBUG() > "/dev/$REMOTE_STDOUT" {
+    if [[ "${funcfiletrace[1]}" == */(debug.lib|debug-zsh).zsh ]]; then return 0; fi
     nice-debug
     read -k1 -s
 }

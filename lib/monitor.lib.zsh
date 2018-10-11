@@ -1,4 +1,8 @@
 #!/bin/zsh
+set -x
+
+# TODO: Really dumb to sleep to avoid a race condition . . . but this is meant to be very dirty
+
 pause_exit() {
     print -- $'\e[4;97m'"${1:-Press any key to exit . . .}"$'\e[0;37m'
     read -k1 -s
