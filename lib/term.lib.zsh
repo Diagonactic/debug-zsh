@@ -66,6 +66,34 @@ typeset -agU supported_end_attrs=( ) all_attrs=( "${(oik)attr[@]}" ) supported_a
 function concmds/{clear{,-to-{bol,eol,eos}},reset} {
 	print -n -- "${cmds[${0##*/}]}"
 }
+function cursor/{goto-{x,xy,y},get-xy} {
+	case "${${0%%-*}##*/}" in
+		(get)	case "${0##*-}" in
+					(xy) # based on a script from http://invisible-island.net/xterm/xterm.faq.html
+							exec < /dev/tty
+							local OLDSTTY=$(stty -g)
+							stty raw -echo min 0
+							print -n -- $'\e[6n' > /dev/tty
+							# tput u7 > /dev/tty    # when TERM=xterm (and relatives)
+							IFS=";" read -r -d R -A pos
+							stty $OLDSTTY
+							# change from one-based to zero based so they work with: tput cup $row $col
+							declare -gi	YPOS=$(( ${pos[1]:2} - 1 )) \
+										XPOS=$(( ${pos[2]} - 1	))
+							return 0
+							;;
+							#echo -n "ROW=$row COL=$col"
+					(*) exit 1 ;;
+				esac
+		;;
+		(goto)	case "${0##*-}" in
+					(x)		echoti hpa "$1"                 ;;
+					(xy) 	echoti cup "$1" "$2"            ;;
+					(y)		local -ir XPOS=-1    YPOS="$1"  ;;
+				esac
+		;;
+	esac
+}
 function consupports/truecolor {
 	case "${0##*/}" in
 		(truecolor) [[ "${supports[${0##*/}]}" == yes ]] ;;

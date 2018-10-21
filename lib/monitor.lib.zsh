@@ -20,9 +20,10 @@ alias expect:args='() { arg_check "${argv[-1]}" "${${argv[1,-2]}[@]}" } "$@" '
 source "${MONITOR_LIB_DIR}/term.lib.zsh"
 print "${cmds[reset]}"
 
-
-
+declare -gi TRACE_LINES="$(( $LINES - 1 ))"
+declare XPOS="-1" YPOS="-1"
 stack-trace() {
+    cursor/goto-xy 0 0
     stack-trace-line() {
         print-code-line() {
             function __debug/p() {
@@ -61,6 +62,7 @@ stack-trace() {
     for (( i=1; i<${#traces[@]}; i++ )); do
         stack-trace-line "${traces[$i]}" "${tracelines[$i]}" "${funcs[$i]}" ${${${(M)i:#1}:+long}:-short}
     done
+    cursor/get-xy
 }
 
 
